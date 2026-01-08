@@ -1,5 +1,5 @@
-export const API_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:3000";
+// src/api/client.js
+export const API_URL = process.env.REACT_APP_API_URL || "/api";
 
 /**
  * Wrapper de fetch que:
@@ -31,10 +31,14 @@ export async function apiFetch(
     try {
       const data = await res.json();
       if (data?.message) message = data.message;
-    } catch {}
+    } catch {
+      // ignorar error de parseo
+    }
     throw new Error(message);
   }
 
+  // Si no hay contenido
   if (res.status === 204) return null;
+
   return res.json();
 }
