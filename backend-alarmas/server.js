@@ -1,95 +1,68 @@
-// server.js
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
 
-// ===============================
-// CARGAR VARIABLES DE ENTORNO
-// ===============================
 dotenv.config();
 
 const app = express();
 
-// ===============================
-// CORS (OBLIGATORIO PARA VERCEL)
-// ===============================
-app.use(cors({
-  origin: (origin, callback) => {
-    if (
-      !origin ||
-      origin.includes("vercel.app")
-    ) {
-      callback(null, true);
-    } else {
-      callback(new Error("CORS no permitido"));
-    }
-  },
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
-}));
+/* ===============================
+   CORS — SOLUCIÓN DEFINITIVA
+================================ */
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", req.headers.origin || "*");
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization"
+  );
+  res.header("Access-Control-Allow-Credentials", "true");
 
-app.options("*", cors());
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200); // 👈 CLAVE
+  }
 
+  next();
+});
 
-// 🔑 PERMITIR PREFLIGHT
-app.options("*", cors());
-
-// ===============================
-// BODY PARSER
-// ===============================
+/* ===============================
+   MIDDLEWARES
+================================ */
 app.use(express.json());
 
-// ===============================
-// VARIABLES
-// ===============================
-const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI;
-
-// ===============================
-// CONEXIÓN A MONGODB
-// ===============================
+/* ===============================
+   MONGODB
+================================ */
 mongoose.connection.on("connected", () => {
   console.log("✅ MongoDB conectado");
-  console.log("📦 Base de datos:", mongoose.connection.db.databaseName);
 });
 
 mongoose.connection.on("error", (err) => {
-  console.error("❌ Error conectando a Mongo:", err);
+  console.error("❌ Mongo error:", err);
 });
 
-mongoose.connect(MONGO_URI);
+mongoose.connect(process.env.MONGO_URI);
 
-// ===============================
-// RUTAS
-// ===============================
-const authRoutes = require("./routes/auth");
-const userRoutes = require("./routes/users");
-const alarmRoutes = require("./routes/alarms");
-const alertRoutes = require("./routes/alerts");
-const adminAlertRoutes = require("./routes/adminAlerts");
-const deviceRoutes = require("./routes/devices");
-const emergencyCodeRoutes = require("./routes/emergencyCodes");
+/* ===============================
+   RUTAS
+================================ */
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/users", require("./routes/users"));
+app.use("/api/alarms", require("./routes/alarms"));
+app.use("/api/alerts", require("./routes/alerts"));
+app.use("/api/admin/alerts", require("./routes/adminAlerts"));
+app.use("/api/devices", require("./routes/devices"));
+app.use("/api/emergency-codes", require("./routes/emergencyCodes"));
 
-app.use("/api/auth", authRoutes);
-app.use("/api/users", userRoutes);
-app.use("/api/alarms", alarmRoutes);
-app.use("/api/alerts", alertRoutes);
-app.use("/api/admin/alerts", adminAlertRoutes);
-app.use("/api/devices", deviceRoutes);
-app.use("/api/emergency-codes", emergencyCodeRoutes);
-
-// ===============================
-// RUTA DE PRUEBA
-// ===============================
 app.get("/", (req, res) => {
-  res.json({ message: "✅ API Alarma Smart funcionando" });
+  res.json({ message: "API Alarma Smart funcionando" });
 });
 
-// ===============================
-// INICIAR SERVIDOR
-// ===============================
+/* ===============================
+   START
+================================ */
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 API escuchando en http://0.0.0.0:${PORT}`);
+  console.log(`🚀 API escuchando en puerto ${PORT}`);
 });
