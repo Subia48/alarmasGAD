@@ -4,20 +4,41 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
 
-// cargar variables .env
+// ===============================
+// CARGAR VARIABLES DE ENTORNO
+// ===============================
 dotenv.config();
 
 const app = express();
 
-// middlewares globales
-app.use(cors());
+// ===============================
+// CORS (OBLIGATORIO PARA VERCEL)
+// ===============================
+app.use(cors({
+  origin: [
+    "https://alarmas-6q2t4t5v-subia48s-projects.vercel.app"
+  ],
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
+}));
+
+// 🔑 PERMITIR PREFLIGHT
+app.options("*", cors());
+
+// ===============================
+// BODY PARSER
+// ===============================
 app.use(express.json());
 
+// ===============================
+// VARIABLES
+// ===============================
 const PORT = process.env.PORT || 3000;
 const MONGO_URI = process.env.MONGO_URI;
 
 // ===============================
-// CONEXIÓN CORRECTA A MONGODB
+// CONEXIÓN A MONGODB
 // ===============================
 mongoose.connection.on("connected", () => {
   console.log("✅ MongoDB conectado");
@@ -49,9 +70,11 @@ app.use("/api/admin/alerts", adminAlertRoutes);
 app.use("/api/devices", deviceRoutes);
 app.use("/api/emergency-codes", emergencyCodeRoutes);
 
-// ruta simple de prueba
+// ===============================
+// RUTA DE PRUEBA
+// ===============================
 app.get("/", (req, res) => {
-  res.json({ message: "API Alarma Smart funcionando" });
+  res.json({ message: "✅ API Alarma Smart funcionando" });
 });
 
 // ===============================
