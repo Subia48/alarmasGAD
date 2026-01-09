@@ -15,13 +15,23 @@ const app = express();
 // CORS (OBLIGATORIO PARA VERCEL)
 // ===============================
 app.use(cors({
-  origin: [
-    "https://alarmas-6q2t4t5v-subia48s-projects.vercel.app"
-  ],
+  origin: (origin, callback) => {
+    if (
+      !origin ||
+      origin.includes("vercel.app")
+    ) {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS no permitido"));
+    }
+  },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 }));
+
+app.options("*", cors());
+
 
 // 🔑 PERMITIR PREFLIGHT
 app.options("*", cors());
